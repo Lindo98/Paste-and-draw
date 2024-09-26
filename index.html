@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<style>
+
+  /* Styles for the button */
+    .panels {
+        display: none; /* Initially hidden */
+    }
+
+    .panels.shown {
+        display: block;
+    }
+    
+
+    /* Remove the paste, draw and toggle icons on Mobile */
+    @media (max-width: 768px) {
+        .hide-on-mobile {
+            display: none;
+        }
+    }
+
+</style>
+<body>
+    
+    <!-- Added the hide-on-mobile class to use on css -->
+    <button rv-unless="model.act.hidePrimaryMenus" data-balloon-pos="down" rv-data-balloon="model.lang.draw_tip | or 'Draw Shapes on Canvas'" rv-class-selected="model.act.drawingMode" class="btn hide-on-mobile" data-cmd="draw">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24" viewBox="0 0 24 24"><path d="M316,386.5H302v4.262a8,8,0,1,0,9.738,9.738H316Zm-12,18a6,6,0,0,1-2-11.657V400.5h7.657A6.009,6.009,0,0,1,304,404.5Zm10-6H304v-10h10Z" transform="translate(-294 -384.5)" fill="currentColor"/></svg>
+    </button>
+
+    <button rv-unless="model.act.hidePrimaryMenus" data-balloon-pos="down" rv-data-balloon="model.lang.paste_tip" rv-class-disabled="model.act.clipBoard | length_is_gt | negate" class="btn hide-on-mobile" data-cmd="paste"><i class="icon-clipboard"></i></button>
+    
+    <button rv-unless="model.act.hidePrimaryMenus" data-balloon-pos="down" rv-data-balloon="model.lang.palette_mode" rv-show="model.showPaletteBtn" class="btn hide-on-mobile" data-cmd="toggle-palette-mode">
+        <i rv-class-icon-droplet="model.colorPaletteMode" rv-class-icon-p-toggle-pallete-copy="model.colorPaletteMode | negate"></i>
+    </button>
+
+</body>
+
+<script>
+
+    // This is a code for the mobile button that closes the panel (it wasn't working)
+
+const panel = document.getElementById('panels');
+    const closeButton = document.getElementById('panels-close');
+
+    // Add an event listener to the close button
+    closeButton.addEventListener('click', () => {
+        panel.classList.remove('shown'); // Remove the 'shown' class to hide the panel
+    });
+
+</script>
+</html>
