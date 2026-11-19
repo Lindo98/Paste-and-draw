@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Signature Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #14145f;
+    --brand: #1a1ad6;
+    --accent: #2ac6ee;
+    --muted: #5b5b85;
+    --line: #dfe3f0;
+    --bg: #f5f7fc;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 16px 64px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  h1 { font-size: 24px; margin: 0 0 4px; color: var(--brand); }
+  .lede { margin: 0 0 24px; color: var(--muted); font-size: 14px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .card h2 { font-size: 15px; margin: 0 0 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .full { grid-column: 1 / -1; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  input[type=text], input[type=url] {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.45; }
+  .hint code { background: var(--bg); padding: 1px 4px; border-radius: 4px; }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+  .preview-scroll { overflow-x: auto; border: 1px dashed var(--line); border-radius: 8px; padding: 12px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; align-items: center; }
+  button {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--brand);
+    cursor: pointer;
+  }
+  .primary { background: var(--brand); color: #fff; }
+  .secondary { background: #fff; color: var(--brand); }
+  .status { font-size: 13px; font-weight: 600; color: #127a3b; }
+  .status.warn { color: #b3261e; }
+  ol { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>PitchPrint email signature</h1>
+  <p class="lede">Fill in your details, check the preview, then copy it into Gmail.</p>
+
+  <div class="card">
+    <h2>Your details</h2>
+    <div class="grid">
+      <div>
+        <label for="name">Full name</label>
+        <input type="text" id="name" value="Lindokuhle Mtengwane" />
+      </div>
+      <div>
+        <label for="title">Job title</label>
+        <input type="text" id="title" value="Software Developer" />
+      </div>
+      <div class="full">
+        <label class="check"><input type="checkbox" id="showPhoto" checked /> Include a photo</label>
+      </div>
+      <div class="full" id="photoField">
+        <label for="photo">Photo link</label>
+        <input type="url" id="photo" value="https://raw.githubusercontent.com/Lindo98/Paste-and-draw/main/signature-images/people/lindokuhle-mtengwane.jpg" />
+        <div class="hint">
+          Must be a public web link starting with <code>https://</code>. Use a square photo of about 192&times;192px.
+          To host it here, add it to <code>signature-images/people/</code> in the repo and use
+          <code>https://raw.githubusercontent.com/Lindo98/Paste-and-draw/main/signature-images/people/your-name.jpg</code>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Preview</h2>
+    <div class="preview-scroll"><div id="preview"></div></div>
+    <div class="actions">
+      <button class="primary" id="copySig">Copy signature</button>
+      <button class="secondary" id="copyHtml">Copy HTML code</button>
+      <span class="status" id="status" role="status"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Add it to Gmail</h2>
+    <ol>
+      <li>Click <strong>Copy signature</strong> above.</li>
+      <li>In Gmail, open <strong>Settings &rarr; See all settings &rarr; General &rarr; Signature</strong>.</li>
+      <li>Create a new signature (or edit yours), click in the box and paste with <strong>Ctrl+V</strong> (<strong>Cmd+V</strong> on Mac).</li>
+      <li>Scroll down and click <strong>Save Changes</strong>.</li>
+    </ol>
+    <p class="hint">Use Chrome or Edge for copying. If images show as broken right after pasting, give it a moment &mdash; Gmail loads them from the links.</p>
+  </div>
+</div>
+
+<script>
+  const IMG = 'https://raw.githubusercontent.com/Lindo98/Paste-and-draw/main/signature-images/';
+  const $ = (id) => document.getElementById(id);
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function nameSize(name) {
+    const n = name.length;
+    if (n <= 16) return 19;
+    if (n <= 20) return 16;
+    if (n <= 24) return 14;
+    return 12;
+  }
+
+  function buildSignature({ name, title, photo }) {
+    // Spacing between sections: tighter when the photo column is present,
+    // so the row always fills 674px (700px minus side padding).
+    const gap = photo ? 8 : 34;
+    const spacer = `<td width="${gap}" style="width:${gap}px;"></td>`;
+    const divider = `<td width="2" valign="middle" style="width:2px; vertical-align:middle;"><div style="width:2px; height:140px; background:#2ac6ee; font-size:0; line-height:0;">&nbsp;</div></td>`;
+    const check = (text) => `<tr><td valign="middle" style="padding:1px 5px 1px 0;"><div style="width:11px; height:11px; border-radius:50%; background:#ef2d5e; color:#ffffff; font-size:8px; line-height:11px; font-weight:700; text-align:center;">&#10003;</div></td><td valign="middle" style="color:#14145f; font-size:9.5px; line-height:13px; font-weight:500;">${text}</td></tr>`;
+    const photoCell = photo
+      ? `<td width="96" valign="middle" style="width:96px; vertical-align:middle;"><img src="${esc(photo)}" width="96" height="96" alt="${esc(name)}" style="display:block; width:96px; height:96px; border:0; border-radius:50%;" /></td>${spacer}`
+      : '';
+
+    return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="700" style="width:700px; border-collapse:collapse; background:#ffffff; font-family:'Inter','Segoe UI',Arial,sans-serif;">
+<tr><td style="padding:12px 10px 0 16px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="674" style="width:674px; border-collapse:collapse;"><tr>
+<td width="172" valign="middle" style="width:172px; vertical-align:middle;">
+<img src="${IMG}logo.png" width="160" height="35" alt="pitchprint" style="display:block; width:160px; height:35px; border:0; margin:0 0 5px 3px;" />
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="172" style="border-collapse:separate;"><tr>
+<td align="center" style="background:#c9f1fb; border-radius:12px; padding:7px 6px 8px; text-align:center; color:#14145f; font-size:12px; line-height:14px; font-weight:700;">All-in-One Web-to-Print<br />Platform for<br /><span style="color:#1717c9; font-size:12.5px; font-weight:800;">Personalized Products</span></td>
+</tr></table>
+</td>
+${spacer}${divider}${spacer}${photoCell}
+<td width="196" valign="middle" style="width:196px; vertical-align:middle;">
+<div style="color:#1a1ad6; font-size:${nameSize(name)}px; line-height:21px; font-weight:800; letter-spacing:-0.3px; white-space:nowrap;">${esc(name)}</div>
+<div style="color:#14145f; font-size:11.5px; line-height:15px; font-weight:400; padding:2px 0 6px;">${esc(title)}</div>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="196" style="border-collapse:collapse;">
+<tr><td width="26" valign="middle" style="width:26px; padding:0 6px 2px 0;"><img src="${IMG}ic-cal.png" width="26" height="26" alt="" style="display:block; width:26px; height:26px; border:0;" /></td>
+<td valign="middle" style="border-bottom:1px solid #2ac6ee; padding:0 0 2px;"><a href="https://calendar.app.google/82dcpQxHgKGSTrvP6" style="text-decoration:none; color:#14145f; font-size:12px; line-height:24px; font-weight:700;">Book a Quick Demo</a></td></tr>
+<tr><td width="26" valign="middle" style="width:26px; padding:3px 6px 2px 0;"><img src="${IMG}ic-mail.png" width="26" height="25" alt="" style="display:block; width:26px; height:25px; border:0;" /></td>
+<td valign="middle" style="border-bottom:1px solid #2ac6ee; padding:3px 0 2px;"><a href="mailto:support@pitchprint.com" style="text-decoration:none; color:#14145f; font-size:12px; line-height:20px; font-weight:700;">support@pitchprint.com</a></td></tr>
+<tr><td width="26" valign="middle" style="width:26px; padding:3px 6px 0 0;"><img src="${IMG}ic-link.png" width="26" height="25" alt="" style="display:block; width:26px; height:25px; border:0;" /></td>
+<td valign="middle" style="border-bottom:1px solid #2ac6ee; padding:3px 0 2px;"><a href="https://www.pitchprint.com" style="text-decoration:none; color:#1a1ad6; font-size:12.5px; line-height:20px; font-weight:700;">www.pitchprint.com</a></td></tr>
+</table>
+</td>
+${spacer}${divider}${spacer}
+<td width="166" valign="middle" style="width:166px; vertical-align:middle;">
+<a href="https://filecheck.io" style="text-decoration:none; display:block;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="166" style="border-collapse:separate;"><tr>
+<td style="background:#fde3ec; border-radius:14px; padding:6px 8px 7px 10px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>
+<td valign="middle" style="padding:0 7px 0 0;"><img src="${IMG}fc-badge.png" width="26" height="25" alt="" style="display:block; width:26px; height:25px; border:0;" /></td>
+<td valign="middle" style="color:#111111; font-size:17px; line-height:20px; font-weight:800; letter-spacing:-0.3px; white-space:nowrap;">FileCheck<span style="color:#ff1f5a;">.io</span></td>
+</tr></table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse; margin-top:4px;"><tr>
+<td valign="middle" style="color:#14145f; font-size:9.5px; line-height:12px; font-weight:400;">Automated artwork checks<br />for print-ready orders.</td>
+<td width="20" valign="middle" style="width:20px;"><img src="${IMG}fc-arrow.png" width="20" height="20" alt="" style="display:block; width:20px; height:20px; border:0;" /></td>
+</tr></table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; margin-top:5px;">
+${check('Check &amp; fix files')}${check('Ensure print quality')}${check('Reduce reprints')}
+</table>
+</td></tr></table>
+</a>
+<div style="height:1px; background:#2ac6ee; margin:10px 0 8px; font-size:0; line-height:0;">&nbsp;</div>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>
+<td style="padding:0 3px 0 0;"><a href="https://facebook.com/pitchprint"><img src="${IMG}so-fb.png" width="20" height="20" alt="Facebook" style="display:block; width:20px; height:20px; border:0;" /></a></td>
+<td style="padding:0 3px 0 0;"><a href="https://linkedin.com/company/pitch-print"><img src="${IMG}so-in.png" width="20" height="20" alt="LinkedIn" style="display:block; width:20px; height:20px; border:0;" /></a></td>
+<td style="padding:0 5px 0 0;"><a href="https://instagram.com/pitchprint"><img src="${IMG}so-ig.png" width="20" height="20" alt="Instagram" style="display:block; width:20px; height:20px; border:0;" /></a></td>
+<td style="padding:0 5px 0 0;"><div style="width:1px; height:20px; background:#1a1ad6; font-size:0; line-height:0;">&nbsp;</div></td>
+<td style="padding:0 4px 0 0;"><a href="https://facebook.com/groups/267392805495926"><img src="${IMG}so-group.png" width="20" height="20" alt="Community Group" style="display:block; width:20px; height:20px; border:0;" /></a></td>
+<td valign="middle" style="font-size:8.5px; line-height:10px;"><a href="https://facebook.com/groups/267392805495926" style="text-decoration:none; color:#1a1ad6; font-size:8.5px; line-height:10px; font-weight:700; white-space:nowrap;">Join our<br />Community Group</a></td>
+</tr></table>
+</td>
+</tr></table>
+</td></tr>
+<tr><td style="padding:6px 0 0; line-height:0; font-size:0;"><img src="${IMG}wave.png" width="700" height="69" alt="" style="display:block; width:700px; height:69px; border:0;" /></td></tr>
+</table>`;
+  }
+
+  function current() {
+    const usePhoto = $('showPhoto').checked;
+    const photo = $('photo').value.trim();
+    return {
+      name: $('name').value.trim() || 'Your Name',
+      title: $('title').value.trim() || 'Your Job Title',
+      photo: usePhoto && /^https:\/\//i.test(photo) ? photo : '',
+    };
+  }
+
+  function setStatus(msg, warn) {
+    const el = $('status');
+    el.textContent = msg;
+    el.className = 'status' + (warn ? ' warn' : '');
+  }
+
+  function render() {
+    $('photoField').style.display = $('showPhoto').checked ? '' : 'none';
+    $('preview').innerHTML = buildSignature(current());
+    const p = $('photo').value.trim();
+    if ($('showPhoto').checked && p && !/^https:\/\//i.test(p)) {
+      setStatus('Photo link must start with https:// — photo hidden for now.', true);
+    } else {
+      setStatus('');
+    }
+  }
+
+  async function copySignature() {
+    const html = buildSignature(current());
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([$('preview').innerText], { type: 'text/plain' }),
+        }),
+      ]);
+    } catch (e) {
+      // Fallback: select the rendered preview and copy it.
+      const range = document.createRange();
+      range.selectNodeContents($('preview'));
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      const ok = document.execCommand('copy');
+      sel.removeAllRanges();
+      if (!ok) return setStatus('Copy failed — select the preview and press Ctrl+C.', true);
+    }
+    setStatus('Signature copied — paste it into Gmail.');
+  }
+
+  async function copyHtml() {
+    try {
+      await navigator.clipboard.writeText(buildSignature(current()));
+      setStatus('HTML code copied.');
+    } catch (e) {
+      setStatus('Copy failed — your browser blocked clipboard access.', true);
+    }
+  }
+
+  ['name', 'title', 'photo', 'showPhoto'].forEach((id) => $(id).addEventListener('input', render));
+  $('copySig').addEventListener('click', copySignature);
+  $('copyHtml').addEventListener('click', copyHtml);
+  render();
+</script>
+</body>
+</html>
