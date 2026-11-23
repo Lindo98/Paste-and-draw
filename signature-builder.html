@@ -94,7 +94,7 @@
           <option value="">Loading photos&hellip;</option>
         </select>
         <div class="hint" id="personHint">
-          Don't see yours? Upload a square photo (about 192&times;192px, named like <code>jane-doe.jpg</code>)
+          Don't see yours? Upload a square photo (about 192&times;192px, named with your full name, e.g. <code>Jane Doe.jpg</code>)
           to <code>signature-images/people/</code> in the repo, then reload this page.
         </div>
         <div id="customField" style="display:none; margin-top:12px;">
@@ -295,9 +295,12 @@ ${check('Check &amp; fix files')}${check('Ensure print quality')}${check('Reduce
   const CUSTOM = '__custom__';
 
   function labelFromFile(file) {
-    return file
-      .replace(/\.[^.]+$/, '')
-      .split(/[-_\s]+/)
+    const base = file.replace(/\.[^.]+$/, '');
+    // "Jenna-Lee Jacobs.jpg" (has capitals or spaces) is used exactly as written;
+    // "jane-doe.jpg" becomes "Jane Doe".
+    if (/[A-Z\s]/.test(base)) return base.trim();
+    return base
+      .split(/[-_]+/)
       .filter(Boolean)
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ');
