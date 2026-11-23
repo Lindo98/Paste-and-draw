@@ -72,7 +72,7 @@
 <body>
 <div class="wrap">
   <h1>PitchPrint email signature</h1>
-  <p class="lede">Fill in your details, check the preview, then copy it into Gmail.</p>
+  <p class="lede">Fill in your details, check the preview, then copy it into Gmail. Open this page in Chrome or Edge &mdash; previews in OneDrive, Teams or email attachments hide the images.</p>
 
   <div class="card">
     <h2>Your details</h2>
@@ -238,6 +238,24 @@ ${check('Check &amp; fix files')}${check('Ensure print quality')}${check('Reduce
     } else {
       setStatus('');
     }
+    watchImages();
+  }
+
+  // If the main image host is blocked (some browsers, ad blockers and office
+  // networks do this), retry each image from GitHub directly, and warn if
+  // images still can't load. Gmail fetches images itself, so the copied
+  // signature is unaffected by what this browser can reach.
+  const FALLBACK = 'https://raw.githubusercontent.com/Lindo98/Paste-and-draw/main/signature-images/';
+  function watchImages() {
+    $('preview').querySelectorAll('img').forEach((img) => {
+      img.addEventListener('error', () => {
+        if (img.src.startsWith(IMG)) {
+          img.src = FALLBACK + img.src.slice(IMG.length);
+        } else {
+          setStatus('Some images are blocked by this browser or network — try another browser or turn off ad blocking. The copied signature will still work in Gmail.', true);
+        }
+      });
+    });
   }
 
   async function copySignature() {
