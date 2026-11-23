@@ -37,7 +37,7 @@
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .full { grid-column: 1 / -1; }
   label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-  input[type=text], input[type=url] {
+  input[type=text], input[type=url], select {
     width: 100%;
     padding: 9px 11px;
     border: 1px solid var(--line);
@@ -79,22 +79,28 @@
     <div class="grid">
       <div>
         <label for="name">Full name</label>
-        <input type="text" id="name" value="Lindokuhle Mtengwane" />
+        <input type="text" id="name" placeholder="e.g. Jane Doe" />
       </div>
       <div>
         <label for="title">Job title</label>
-        <input type="text" id="title" value="Software Developer" />
+        <input type="text" id="title" placeholder="e.g. Customer Success Representative" />
       </div>
       <div class="full">
         <label class="check"><input type="checkbox" id="showPhoto" checked /> Include a photo</label>
       </div>
       <div class="full" id="photoField">
-        <label for="photo">Photo link</label>
-        <input type="url" id="photo" value="https://raw.githubusercontent.com/Lindo98/Paste-and-draw/main/signature-images/people/lindokuhle-mtengwane.jpg" />
-        <div class="hint">
-          Must be a public web link starting with <code>https://</code>. Use a square photo of about 192&times;192px.
-          To host it here, add it to <code>signature-images/people/</code> in the repo and use
-          <code>https://raw.githubusercontent.com/Lindo98/Paste-and-draw/main/signature-images/people/your-name.jpg</code>.
+        <label for="person">Choose your photo</label>
+        <select id="person">
+          <option value="">Loading photos&hellip;</option>
+        </select>
+        <div class="hint" id="personHint">
+          Don't see yours? Upload a square photo (about 192&times;192px, named like <code>jane-doe.jpg</code>)
+          to <code>signature-images/people/</code> in the repo, then reload this page.
+        </div>
+        <div id="customField" style="display:none; margin-top:12px;">
+          <label for="photo">Photo link</label>
+          <input type="url" id="photo" placeholder="https://..." />
+          <div class="hint">Must be a public web link starting with <code>https://</code>.</div>
         </div>
       </div>
     </div>
@@ -266,10 +272,68 @@ ${check('Check &amp; fix files')}${check('Ensure print quality')}${check('Reduce
     }
   }
 
+  // ---- Photo dropdown: lists every image in signature-images/people/ ----
+  const PEOPLE_API = 'https://api.github.com/repos/Lindo98/Paste-and-draw/contents/signature-images/people?ref=main';
+  const CUSTOM = '__custom__';
+
+  function labelFromFile(file) {
+    return file
+      .replace(/\.[^.]+$/, '')
+      .split(/[-_\s]+/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+
+  function fillPeople(files) {
+    const sel = $('person');
+    sel.innerHTML = '';
+    sel.add(new Option('— Select your name —', ''));
+    files
+      .sort((a, b) => a.localeCompare(b))
+      .forEach((f) => sel.add(new Option(labelFromFile(f), IMG + 'people/' + encodeURIComponent(f))));
+    sel.add(new Option('Use my own photo link…', CUSTOM));
+  }
+
+  async function loadPeople() {
+    try {
+      const res = await fetch(PEOPLE_API, { headers: { Accept: 'application/vnd.github+json' } });
+      if (!res.ok) throw new Error(res.status);
+      const items = await res.json();
+      const files = items
+        .filter((i) => i.type === 'file' && /\.(jpe?g|png|gif|webp)$/i.test(i.name))
+        .map((i) => i.name);
+      fillPeople(files);
+    } catch (e) {
+      // GitHub unreachable or rate-limited: fall back to pasting a link.
+      const sel = $('person');
+      sel.innerHTML = '';
+      sel.add(new Option('Couldn\'t load the photo list — paste a link below', CUSTOM));
+      onPersonChange();
+    }
+  }
+
+  function onPersonChange() {
+    const sel = $('person');
+    const custom = sel.value === CUSTOM;
+    $('customField').style.display = custom ? '' : 'none';
+    if (!custom) {
+      $('photo').value = sel.value;
+      // Fill in the name from the photo if the person hasn't typed one yet.
+      if (sel.value && !$('name').value.trim()) $('name').value = sel.options[sel.selectedIndex].text;
+    } else {
+      $('photo').value = '';
+      $('photo').focus();
+    }
+    render();
+  }
+
   ['name', 'title', 'photo', 'showPhoto'].forEach((id) => $(id).addEventListener('input', render));
+  $('person').addEventListener('change', onPersonChange);
   $('copySig').addEventListener('click', copySignature);
   $('copyHtml').addEventListener('click', copyHtml);
   render();
+  loadPeople();
 </script>
 </body>
 </html>
